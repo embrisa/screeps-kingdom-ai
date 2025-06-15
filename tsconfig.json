@@ -1,16 +1,20 @@
 {
     "compilerOptions": {
-        "target": "ES2021",
-        "module": "commonjs",
+        "target": "ES2019",
+        "module": "ES2020",
         "lib": [
-            "es2021"
+            "es2019"
         ],
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "rootDir": "src",
         "outDir": "dist",
-        "types": [],
+        "types": [
+            "@types/screeps",
+            "@types/node",
+            "jest"
+        ],
         "sourceMap": true
     },
     "include": [

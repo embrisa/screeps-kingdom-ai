@@ -1,0 +1,21 @@
+# Screeps server configuration
+# See: https://github.com/screeps/screeps-launcher for more details
+
+# serverConfig:
+#   tickRate: 200 # Set the tick rate in milliseconds
+#   welcomeText: |
+#     <h1>Welcome</h1>
+#     <div>Powered by screepsmod-admin-utils</div>
+serverConfig:
+  tickRate: 500
+
+servers:
+  local:
+    host: localhost
+    port: 21025
+    http: true
+    email: testuser
+    password: password
+  main:
+    token: 4e478e9d-4a52-42ed-87fe-d94ea46dcc56
+    branch: main 

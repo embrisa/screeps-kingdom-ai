@@ -91,10 +91,12 @@ This project follows a **standard GitHub flow**: feature branches ➜ pull reque
 
 Project scripts (defined in `package.json`):
 
-* `build` – Compile TypeScript with tsc and bundle with webpack.
-* `sim` – Spin up a local Screeps server for fast iterations.
-* `lint` – ESLint + Prettier.
-* `test` – Jest unit tests.
+* `build` – Compile TypeScript and bundle with Rollup.
+* `lint` – ESLint with TypeScript support and Screeps globals.
+* `test` – Jest unit tests with TypeScript support.
+* `watch` – Watch mode for continuous compilation during development.
+* `format` – Prettier code formatting.
+* `push` – Upload compiled code to Screeps using screeps-api.
 
 ---
 
@@ -105,22 +107,49 @@ Project scripts (defined in `package.json`):
 git clone https://github.com/<your-username>/screeps-kingdom-ai.git
 cd screeps-kingdom-ai
 
-# 1. Install dependencies
+# 1. Install Node.js 16 (recommended)
+# Using nvm (recommended):
+nvm install 16
+nvm use 16
+
+# 2. Install dependencies
 npm install
 
-# 2. Configure your screeps credentials
-cp .env.example .env   # fill in email, token, branch
+# 3. Initialize the local Screeps server
+npm run sim:init
 
-# 3. Initialize and launch a local simulation (optional)
-npm run sim:init   # only the first time to create config
-npm run sim        # start the server with Steam auth
+# 4. Start the local server
+npm run sim
 
-# 4. Build your bundle (local use only)
+# 5. Build your AI bundle
 npm run build
 
-# 5. Upload the bundle to Screeps (online shard)
+# 6. Upload the bundle to Screeps (online shard)
 npm run push   # uses SCREEPS_TOKEN & SCREEPS_BRANCH from .env
+
+# 7. Run tests and linting
+npm test
+npm run lint
 ```
+
+### Local Development
+
+This project is configured to use the official `screeps` package for local development, which provides a command-line interface to run a private server. Ensure you are using Node.js v16, as specified in the `.nvmrc` file.
+
+Your local client will look for scripts in:
+`"/Users/philippetillheden/Library/Application Support/Screeps/scripts/0_0_0_0___21025/default"`
+
+You can build and copy the script automatically by running:
+`npm run build:deploy`
+
+### Debugging
+
+The AI includes a built-in logger with multiple verbosity levels. You can control the log output from the in-game console by setting `Memory.logLevel`.
+
+*   `Memory.logLevel = 0` (DEBUG): Shows all messages, including profiler data.
+*   `Memory.logLevel = 1` (INFO): The default level; shows standard events like spawning.
+*   `Memory.logLevel = 2` (WARN): Shows warnings.
+*   `Memory.logLevel = 3` (ERROR): Shows only errors.
 
 ---
 

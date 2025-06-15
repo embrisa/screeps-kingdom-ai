@@ -1,47 +1,186 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Global type declarations and Memory schema for Screeps Kingdom AI
 
-export type RoleName = 'harvester' | 'upgrader' | 'builder';
+import { LogLevel } from './utils/Logger';
 
-export interface CreepMemory {
-    role: RoleName;
-    working?: boolean;
+export type RoleName =
+  | 'harvester'
+  | 'upgrader'
+  | 'builder'
+  | 'hauler'
+  | 'repairer'
+  | 'staticHarvester'
+  | 'scout'
+  | 'reserver'
+  | 'pioneer'
+  | 'remoteHarvester'
+  | 'remoteHauler'
+  | 'remoteDefender'
+  | 'defender';
+
+export interface RoomStats {
+  controller?: {
+    level: number;
+    progress: number;
+    progressTotal: number;
+    ticksToDowngrade: number;
+  };
+  energy?: {
+    available: number;
+    capacity: number;
+  };
+  storage?: {
+    energy: number;
+    total: number;
+  };
+  construction?: {
+    count: number;
+    progress: number;
+    progressTotal: number;
+  };
 }
 
-export interface RoomMemory {
-    // Future room-specific data
+export interface RoomPlan {
+  paths: { [key: string]: SerializedPos[] };
+  lastStructureCount?: number;
+}
+
+export interface SerializedPos {
+  x: number;
+  y: number;
 }
 
 export interface StatsMemory {
-    energyHarvested?: number;
-    spawnIdleTicks?: number;
+  gcl: {
+    level: number;
+    progress: number;
+    progressTotal: number;
+  };
+  gpl: {
+    level: number;
+    progress: number;
+    progressTotal: number;
+  };
+  cpu: {
+    bucket: number;
+    limit: number;
+    used: number;
+  };
+  creeps: { [key in RoleName]?: number };
+  rooms: { [key: string]: RoomStats };
+  remote?: {
+    activeRooms: number;
+    totalHighways: number;
+    energyHauled: number;
+    remoteCreepCount: number;
+    averageDistance: number;
+  };
+  energyHarvested?: number;
+  spawnIdleTicks?: number;
 }
 
-// Extend the built-in Memory interface (thin placeholder until @types/screeps installed)
+// Augment global Screeps interfaces
 declare global {
-    interface Memory {
-        stats?: StatsMemory;
-    }
+  interface CreepMemory {
+    role: RoleName;
+    homeRoom?: string;
+    working?: boolean;
+    recycling?: boolean;
+    sourceId?: Id<Source>;
+    targetRoom?: string;
+    containerId?: Id<StructureContainer>;
+    remoteSourceId?: Id<Source>;
+    // Error handling and position tracking
+    lastPos?: { x: number; y: number };
+    stuckTicks?: number;
+    isReturning?: boolean;
+    homeRoom: string;
+    path?: PathStep[];
+    stuckCount?: number;
+    squad?: string;
+  }
+
+  interface Memory {
+    stats?: StatsMemory;
+    uuid: number;
+    log: unknown;
+    logLevel: LogLevel;
+    roomPlans?: { [roomName: string]: RoomPlan };
+    spawnQueue?: SpawnRequest[];
+    highways?: { [highwayId: string]: Highway };
+    scoutQueue?: string[];
+    remoteRooms?: { [roomName: string]: RemoteRoomMemory };
+    roomPlan?: RoomPlan;
+    threatProfile?: ThreatProfile;
+    defenseStatus?: DefenseStatus;
+  }
+
+  // The global intel cache and the mutator helper are defined in `NodeJS.Global` below.
 }
 
-// Minimal globals so TypeScript compiles without full Screeps typings
-declare const Game: any;
-declare const Memory: any;
-declare const BODYPART_COST: Record<string, number>;
-declare const FIND_SOURCES: number;
-declare const STRUCTURE_SPAWN: string;
-declare const STRUCTURE_EXTENSION: string;
-declare const RESOURCE_ENERGY: string;
-declare const ERR_NOT_IN_RANGE: number;
-declare const OK: number;
-declare const FIND_STRUCTURES: number;
-declare const FIND_CONSTRUCTION_SITES: number;
+export {};
 
-declare type BodyPartConstant = string;
+export interface Highway {
+  path: { x: number; y: number; roomName: string }[];
+  createdAt: number;
+}
 
-declare const WORK: BodyPartConstant;
-declare const CARRY: BodyPartConstant;
-declare const MOVE: BodyPartConstant;
+// --- Phase 3 Types ---
+export interface SpawnRequest {
+  role: RoleName;
+  memory: CreepMemory;
+  roomName?: string; // optional – specific spawn room
+}
 
-declare const console: any;
+export interface RoomIntel {
+  sources: { id: Id<Source>; pos: SerializedPos }[];
+  mineral?: MineralConstant;
+  controller?: {
+    owner?: string;
+    reservation?: { username: string; ticksToEnd: number };
+    level?: number;
+  };
+  homeRoom?: string; // The primary room managing this remote room
+  lastScouted: number;
+  hostile?: boolean;
+}
 
-export { }; 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+namespace NodeJS {
+  // Extending the NodeJS global type so we can use `global.intel` and `global.setIntelDirty` without casting to `any`.
+  // This allows us to avoid `as any` throughout the code-base while keeping strong typing.
+  // The declaration is placed inside `declare global` to merge correctly.
+  interface Global {
+    /**
+     * Cached intel information keyed by room name. Populated from RawMemory segments
+     * in `main.ts` and mutated by the scouting / remote-ops pipeline.
+     */
+    intel?: { [roomName: string]: RoomIntel };
+    /**
+     * Marks the intel cache as dirty so it will be persisted back to the segment
+     * at the end of the current tick.
+     */
+    setIntelDirty: () => void;
+  }
+}
+
+export interface ThreatProfile {
+  level: 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  type: 'PEACETIME' | 'HARASS' | 'SIEGE' | 'CONTROLLER_ATTACK';
+  dps: number;
+  heal: number;
+  hostileCount: number;
+  lastUpdated: number;
+}
+
+export interface DefenseStatus {
+  mode: 'IDLE' | 'REPAIR' | 'ATTACK';
+  focusTarget?: Id<Creep>;
+  repairTarget?: Id<Structure>;
+}
+
+export interface RemoteRoomMemory {
+  homeRoom: string;
+  sources?: Id<Source>[];
+  mineral?: MineralConstant;
+}

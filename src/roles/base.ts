@@ -1,4 +1,6 @@
+import { RoleName } from '../types';
+
 export interface Role {
-    name: string;
-    run(creep: any): void;
-} 
+  name: RoleName;
+  run(creep: Creep): void;
+}

@@ -1,0 +1,9 @@
+{
+  "mods": [
+    "node_modules/screepsmod-admin-utils/index.js",
+    "scripts/set-tick-duration.js"
+  ],
+  "bots": {
+    "simplebot": "node_modules/@screeps/simplebot/src"
+  }
+}

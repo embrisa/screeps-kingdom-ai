@@ -1,9 +1,9 @@
-import clear from 'rollup-plugin-clear';
-import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-import typescript from 'rollup-plugin-typescript2';
+const clear = require('rollup-plugin-clear');
+const resolve = require('@rollup/plugin-node-resolve');
+const commonjs = require('@rollup/plugin-commonjs');
+const typescript = require('rollup-plugin-typescript2');
 
-export default {
+module.exports = {
     input: 'src/main.ts',
     output: {
         file: 'dist/main.js',
